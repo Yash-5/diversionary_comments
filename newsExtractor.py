@@ -6,6 +6,7 @@ def extractArticle(link, getKeywords=False, getAuthors=False):
     article.parse()
     ans = [article.title, article.text]
     if getKeywords:
+        article.nlp()
         ans += [article.keywords]
     if getAuthors:
         ans += [article.authors]
