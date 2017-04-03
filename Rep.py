@@ -1,20 +1,32 @@
 import json
 from pprint import pprint
 import os
+import re
+import string
 
-def replaceCorefs(filename):
-    print "jsdhbjdsbdjhbv"
-    os.chdir("stanford-corenlp-full-2016-10-31")
+def cleanDoc(doc):
+    aposRegex = re.compile(" ’")
+    doc = re.sub(aposRegex, "’", doc)
+    aposRegex = re.compile(" '")
+    doc = re.sub(aposRegex, "'", doc)
+    transDict = {key:None for key in string.punctuation}
+    transDict.update({"’":"’", "'":"'", "-":"-"})
+    translator = str.maketrans(transDict)
+    doc = doc.translate(translator)
+    return doc
+
+def replaceCorefs(filename, pathToStanCoreNLP):
+    currDir = os.getcwd()
+    os.chdir(pathToStanCoreNLP)
+    doc = ""
     with open(filename, "r") as data_file:    
         data = json.load(data_file)
-
     senten = {}
     for i in range(len(data["sentences"])):
         senten[i + 1] = {}
         for word in data["sentences"][i]["tokens"]:
-            senten[i + 1][word["index"]] = word["word"]
-    cnt = 1
-    for key, coref in data["corefs"].iteritems():
+            senten[i + 1][word["index"]] = word["originalText"]
+    for key, coref in data["corefs"].items():
         for curr in coref:
             if curr["isRepresentativeMention"]:
                 hold = curr["text"]
@@ -27,5 +39,8 @@ def replaceCorefs(filename):
                         del senten[curr["sentNum"]][i]
                     except KeyError:
                         continue
-    os.chdir("..")
-    return senten
+    os.chdir(currDir)
+    for x in sorted(senten):
+        for y in sorted(senten[x]):
+            doc += senten[x][y] + " "
+    return doc
